@@ -1,6 +1,8 @@
 import codecs
 import os
 import re
+import sys
+from shutil import rmtree
 
 from setuptools import Command, find_packages, setup
 
@@ -35,9 +37,16 @@ with codecs.open(os.path.join(here, 'requirements.txt')) as f:
         install_requires.append(requirement)
 
 
-class VersionCommand(Command):
-    description = 'print library version'
+class UploadCommand(Command):
+    """Support setup.py publish."""
+
+    description = 'Build and publish the package.'
     user_options = []
+
+    @staticmethod
+    def status(s):
+        """Prints things in bold."""
+        print('\033[1m{0}\033[0m'.format(s))
 
     def initialize_options(self):
         pass
@@ -46,11 +55,27 @@ class VersionCommand(Command):
         pass
 
     def run(self):
-        print(version)
+        try:
+            self.status('Removing previous builds…')
+            rmtree(os.path.join(here, 'dist'))
+        except FileNotFoundError:
+            pass
+
+        self.status('Building Source distribution…')
+        os.system('{0} setup.py sdist'.format(sys.executable))
+
+        self.status('Uploading the package to PyPi via Twine…')
+        os.system('twine upload dist/*')
+
+        self.status('Pushing git tags…')
+        os.system('git tag v{0}'.format(version))
+        os.system('git push --tags')
+
+        sys.exit()
 
 
 setup(
-    name='template_to_pdf',
+    name='template-to-pdf',
     version=version,
     description='Tool for converting HTML templates to PDF',
     long_description=long_description,
@@ -71,6 +96,6 @@ setup(
     packages=find_packages(exclude=['tests*']),
     install_requires=install_requires,
     cmdclass={
-        'version': VersionCommand,
+        'upload': UploadCommand,
     },
 )

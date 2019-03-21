@@ -21,5 +21,4 @@ lint:
 	pre-commit run -a -v
 
 release: test
-	git tag `python setup.py -q version`
-	git push origin `python setup.py -q version`
+	python setup.py upload
