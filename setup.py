@@ -49,33 +49,6 @@ class VersionCommand(Command):
         print(version)
 
 
-class EntryPointsCommand(Command):
-    description = 'display entry points'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    @classmethod
-    def get_entry_points(cls):
-        hooks = open('.pre-commit-hooks.yaml').readlines()
-        entry_points = []
-        for hook in hooks:
-            if 'id:' in hook:
-                entry_points.append({'entry': hook.split(':')[-1].strip()})
-
-            if 'name:' in hook:
-                entry_points[-1]['name'] = hook.split(':')[-1].strip()
-
-        return ['{entry} = {name}:main'.format(**ep) for ep in entry_points]
-
-    def run(self):
-        print('\n'.join(self.get_entry_points()))
-
-
 setup(
     name='template_to_pdf',
     version=version,
@@ -97,11 +70,7 @@ setup(
     ],
     packages=find_packages(exclude=['tests*']),
     install_requires=install_requires,
-    entry_points={
-        'console_scripts': EntryPointsCommand.get_entry_points(),
-    },
     cmdclass={
         'version': VersionCommand,
-        'show_hooks': EntryPointsCommand,
     },
 )

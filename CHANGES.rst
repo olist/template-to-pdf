@@ -5,4 +5,4 @@ Changelog
 0.0.1
 ~~~~~
 
-* Initial release
+* Add PdfRenderer / Initial release
