@@ -21,6 +21,21 @@ def pdf_renderer():
     return MyPdfRenderer(templates_path=[CURRENT_PATH])
 
 
+@pytest.fixture
+def temp_templates_folder():
+    app_path = os.path.dirname(template_to_pdf.__file__)
+    template_path = f'{app_path}/templates'
+    os.mkdir(template_path)
+    filename = f'{template_path}/foo.html'
+    with open(filename, 'w') as f:
+        f.write('foo')
+
+    yield template_path
+
+    os.remove(filename)
+    os.rmdir(template_path)
+
+
 def test_pdf_renderer_custom_template_path():
     with tempfile.TemporaryDirectory() as tmp_dirname:
         filename = f'{tmp_dirname}/foo.html'
@@ -34,21 +49,23 @@ def test_pdf_renderer_custom_template_path():
     assert pdf_renderer.template
 
 
-def test_pdf_renderer_default_template_path():
-    app_path = os.path.dirname(template_to_pdf.__file__)
-    template_path = f'{app_path}/templates'
-    os.mkdir(template_path)
-    filename = f'{template_path}/foo.html'
-    with open(filename, 'w') as f:
-        f.write('foo')
+def test_pdf_renderer_default_template_path(temp_templates_folder):
+    pdf_renderer = MyPdfRenderer()
+
+    assert pdf_renderer._environment
+    assert pdf_renderer.template
+    assert pdf_renderer.template.filename == f'{temp_templates_folder}/foo.html'
+
+
+def test_pdf_renderer_default_template_path_dirty_sys_path(monkeypatch, temp_templates_folder):
+    import sys
+    monkeypatch.setattr(sys, 'path', ['dirt'] + sys.path)
 
     pdf_renderer = MyPdfRenderer()
 
-    os.remove(filename)
-    os.rmdir(template_path)
     assert pdf_renderer._environment
     assert pdf_renderer.template
-    assert pdf_renderer.template.filename == f'{template_path}/foo.html'
+    assert pdf_renderer.template.filename == f'{temp_templates_folder}/foo.html'
 
 
 def test_pdf_renderer_invalid_file():
