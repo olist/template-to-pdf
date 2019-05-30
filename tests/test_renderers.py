@@ -49,6 +49,23 @@ def test_pdf_renderer_custom_template_path():
     assert pdf_renderer.template
 
 
+def test_pdf_renderer_template_path_class_attribute():
+    with tempfile.TemporaryDirectory() as tmp_dirname:
+        class CustomPdfRenderer(PdfRenderer):
+            template_path = tmp_dirname
+            template_filename = 'foo.html'
+
+        filename = f'{tmp_dirname}/foo.html'
+        with open(filename, 'w') as f:
+            f.write('foo')
+
+        pdf_renderer = CustomPdfRenderer()
+
+    assert pdf_renderer.template.filename == filename
+    assert pdf_renderer._environment
+    assert pdf_renderer.template
+
+
 def test_pdf_renderer_default_template_path(temp_templates_folder):
     pdf_renderer = MyPdfRenderer()
 

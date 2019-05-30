@@ -2,6 +2,12 @@ Changelog
 ---------
 
 
+0.1.0
+~~~~~
+
+* Allow to set template base path via class attribute
+
+
 0.0.3
 ~~~~~
 

@@ -1,25 +1,29 @@
 import glob
 import os.path
 import sys
+from itertools import chain
 
 from jinja2 import Environment, ChoiceLoader, FileSystemLoader, select_autoescape
 from weasyprint import HTML
 
 
 class PdfRenderer:
+    template_path = None
     template_filename = None
 
     def __init__(self, templates_path=None):
-        default_templates_path = (glob.glob('{}/*/templates/'.format(path)) for path in sys.path[:2])
+        paths = templates_path or []
+        local_paths = (glob.glob('{}/*/templates/'.format(path)) for path in sys.path[:2])
 
-        if isinstance(templates_path, str):
-            templates_path = [templates_path]
+        if isinstance(paths, str):
+            paths = [paths]
 
-        templates_path = templates_path or []
-        templates_path += default_templates_path
+        if self.template_path:
+            paths.append(self.template_path)
 
+        all_paths = (path for path in chain(local_paths, paths) if path)
         self._environment = Environment(
-            loader=ChoiceLoader(FileSystemLoader(template_path) for template_path in templates_path),
+            loader=ChoiceLoader(FileSystemLoader(path) for path in all_paths),
             autoescape=select_autoescape(['html', 'xml']),
         )
         self.template = self._environment.get_template(self.template_filename)
